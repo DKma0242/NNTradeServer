@@ -140,7 +140,6 @@ class AccountTestCase(TestCase):
         data = json.loads(response.content)
         self.assertEqual(data['success'], True)
         self.assertEqual('token' in data.keys(), True)
-        token = data['token']
         response = self.client.delete('/account/token/', self.add_secret({
             'username': 'login_name',
             'token': 'Invalid token'}))

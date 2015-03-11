@@ -4,3 +4,4 @@
 local_settings.py
 .idea
 *.sqlite3
+.coverage

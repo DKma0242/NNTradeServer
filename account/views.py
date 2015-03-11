@@ -9,11 +9,13 @@ from erron import errno
 from models import UserToken
 
 
-@request_filter(['POST'])
+@request_filter(['POST', 'DELETE'])
 @authenticate
 def view_user(request):
     if request.method == 'POST':
         return register(request)
+    if request.method == 'DELETE':
+        return delete(request)
 
 
 @request_filter(['POST', 'DELETE'])
@@ -27,10 +29,10 @@ def view_token(request):
 
 @request_parameter(['username', 'password'])
 def register(request):
-    username = request.POST['username']
+    username = request.data['username']
     if User.objects.filter(username=username).count() > 0:
         return errno.response_with_erron(errno.ERRON_USERNAME_EXIST)
-    password = request.POST['password']
+    password = request.data['password']
     user = User.objects.create_user(username=username,
                                     password=password,
                                     email='')
@@ -40,11 +42,24 @@ def register(request):
 
 
 @request_parameter(['username', 'password'])
-def login(request):
-    username = request.POST['username']
+def delete(request):
+    username = request.data['username']
     if User.objects.filter(username=username).count() == 0:
         return errno.response_with_erron(errno.ERRON_USERNAME_NON_EXIST)
-    password = request.POST['password']
+    password = request.data['password']
+    user = auth.authenticate(username=username, password=password)
+    if user is None:
+        return errno.response_with_erron(errno.ERRON_MISMATCH_USERNAME_PASSWORD)
+    user.delete()
+    return HttpResponse(json.dumps({'success': True}))
+
+
+@request_parameter(['username', 'password'])
+def login(request):
+    username = request.data['username']
+    if User.objects.filter(username=username).count() == 0:
+        return errno.response_with_erron(errno.ERRON_USERNAME_NON_EXIST)
+    password = request.data['password']
     user = auth.authenticate(username=username, password=password)
     if user is None:
         return errno.response_with_erron(errno.ERRON_MISMATCH_USERNAME_PASSWORD)
@@ -57,6 +72,6 @@ def login(request):
 @request_parameter(['username', 'token'])
 @request_login
 def logout(request):
-    token = request.DELETE['token']
+    token = request.data['token']
     UserToken.objects.filter(token=token).delete()
     return HttpResponse(json.dumps({'success': True}))
