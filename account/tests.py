@@ -126,3 +126,26 @@ class AccountTestCase(TestCase):
         data = json.loads(response.content)
         self.assertEqual(data['success'], True)
 
+    def test_logout_invalid_token(self):
+        response = self.client.post('/account/user/', self.add_secret({
+            'username': 'login_name',
+            'password': 'password'}))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(data['success'], True)
+        response = self.client.post('/account/token/', self.add_secret({
+            'username': 'login_name',
+            'password': 'password'}))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(data['success'], True)
+        self.assertEqual('token' in data.keys(), True)
+        token = data['token']
+        response = self.client.delete('/account/token/', self.add_secret({
+            'username': 'login_name',
+            'token': 'Invalid token'}))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['errno'], errno.ERRON_MISMATCH_TOKEN)
+

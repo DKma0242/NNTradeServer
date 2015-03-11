@@ -3,6 +3,7 @@ import hashlib
 import operator
 from collections import OrderedDict
 from functools import wraps
+from django.contrib.auth.models import User
 from erron import errno
 from account.models import UserToken
 from models import AuthKey
@@ -50,12 +51,30 @@ def authenticate(view):
     return wrapper
 
 
+def request_login(view):
+    @wraps(view)
+    def wrapper(request, *args, **kwargs):
+        init_rest(request)
+        if 'username' not in request.data.keys() or 'token' not in request.data.keys():
+            return errno.response_with_erron(errno.ERROR_MISSING_PARAMETER)
+        username = request.data['username']
+        user = User.objects.filter(username=username)
+        if user.count() == 0:
+            return errno.response_with_erron(errno.ERRON_MISMATCH_TOKEN)
+        user = user[0]
+        token = request.data['token']
+        if UserToken.objects.filter(user=user, token=token).count() == 0:
+            return errno.response_with_erron(errno.ERRON_MISMATCH_TOKEN)
+        return view(request, *args, **kwargs)
+    return wrapper
+
+
 def request_filter(accept):
     def wrapper(view):
         @wraps(view)
         def view_wrapper(request, *args, **kwargs):
             if request.method not in accept:
-                return errno.response_invalid_request_method()
+                return errno.response_with_erron(errno.ERROR_INVALID_REQUEST_METHOD)
             return view(request, *args, **kwargs)
         return view_wrapper
     return wrapper
@@ -68,7 +87,7 @@ def request_parameter(keys):
             init_rest(request)
             for key in keys:
                 if key not in request.data.keys():
-                    return errno.response_missing_parameter()
+                    return errno.response_with_erron(errno.ERROR_MISSING_PARAMETER)
             return view(request, *args, **kwargs)
         return view_wrapper
     return wrapper

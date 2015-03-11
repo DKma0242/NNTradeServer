@@ -17,11 +17,3 @@ def response_with_erron(erron):
     if erron == ERRON_NO_ERROR:
         return HttpResponse(json.dumps({'success': True, 'errno': erron}))
     return HttpResponse(json.dumps({'success': False, 'errno': erron}))
-
-
-def response_missing_parameter():
-    return response_with_erron(ERROR_MISSING_PARAMETER)
-
-
-def response_invalid_request_method():
-    return response_with_erron(ERROR_INVALID_REQUEST_METHOD)

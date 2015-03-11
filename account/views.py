@@ -4,7 +4,7 @@ from datetime import datetime
 from django.http import HttpResponse
 from django.contrib import auth
 from django.contrib.auth.models import User
-from auth.auth import authenticate, request_filter, request_parameter
+from auth.auth import authenticate, request_filter, request_parameter, request_login
 from erron import errno
 from models import UserToken
 
@@ -55,6 +55,7 @@ def login(request):
 
 
 @request_parameter(['username', 'token'])
+@request_login
 def logout(request):
     token = request.DELETE['token']
     UserToken.objects.filter(token=token).delete()
