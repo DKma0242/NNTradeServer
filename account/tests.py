@@ -1,7 +1,9 @@
+import json
 from django.test import TestCase
 from django.test.client import Client
 from auth.models import AuthKey
 from auth.auth import get_dict_md5
+from erron import errno
 
 
 class AccountTestCase(TestCase):
@@ -10,16 +12,35 @@ class AccountTestCase(TestCase):
         self.key = 'test_key'
         self.secret_key = 'test_secret_key'
         AuthKey(key=self.key, secret=self.secret_key).save()
+        self.client = Client()
 
     def add_secret(self, data):
         data['key'] = self.key
         data['secret'] = get_dict_md5(data, self.secret_key)
         return data
 
-    def test_register(self):
-        client = Client()
-        response = client.post('/account/user/', self.add_secret({'username': 'test_name', 'password': 'password'}))
+    def test_register_normal(self):
+        response = self.client.post('/account/user/', self.add_secret({
+            'username': 'normal_name',
+            'password': 'password'}))
         self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(data['success'], True)
+
+    def test_register_exist_username(self):
+        response = self.client.post('/account/user/', self.add_secret({
+            'username': 'exist_name',
+            'password': 'password'}))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(data['success'], True)
+        response = self.client.post('/account/user/', self.add_secret({
+            'username': 'exist_name',
+            'password': 'password'}))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['errno'], errno.ERRON_USERNAME_EXIST)
 
     def test_login(self):
         pass
