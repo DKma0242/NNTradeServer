@@ -51,8 +51,50 @@ class AccountTestCase(TestCase):
         self.assertEqual(data['success'], False)
         self.assertEqual(data['errno'], errno.ERROR_INVALID_REQUEST_METHOD)
 
-    def test_login(self):
-        pass
+    def test_login_normal(self):
+        response = self.client.post('/account/user/', self.add_secret({
+            'username': 'login_name',
+            'password': 'password'}))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(data['success'], True)
+        response = self.client.post('/account/token/', self.add_secret({
+            'username': 'login_name',
+            'password': 'password'}))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(data['success'], True)
+        self.assertEqual('token' in data.keys(), True)
+
+    def test_login_non_exist(self):
+        response = self.client.post('/account/user/', self.add_secret({
+            'username': 'login_name',
+            'password': 'password'}))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(data['success'], True)
+        response = self.client.post('/account/token/', self.add_secret({
+            'username': 'login_name_non_exist',
+            'password': 'password'}))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['errno'], errno.ERRON_USERNAME_NON_EXIST)
+
+    def test_login_mismatch_password(self):
+        response = self.client.post('/account/user/', self.add_secret({
+            'username': 'login_name',
+            'password': 'password'}))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(data['success'], True)
+        response = self.client.post('/account/token/', self.add_secret({
+            'username': 'login_name',
+            'password': 'password_mismatch'}))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['errno'], errno.ERRON_MISMATCH_USERNAME_PASSWORD)
 
     def test_logout(self):
         pass

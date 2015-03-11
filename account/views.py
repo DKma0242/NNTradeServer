@@ -48,7 +48,7 @@ def login(request):
     if 'password' not in request.POST:
         return errno.response_missing_parameter()
     username = request.POST['username']
-    if User.objects.filter(username=username) == 0:
+    if User.objects.filter(username=username).count() == 0:
         return errno.response_with_erron(errno.ERRON_USERNAME_NON_EXIST)
     password = request.POST['password']
     user = auth.authenticate(username=username, password=password)
@@ -57,7 +57,7 @@ def login(request):
     token = hashlib.md5(username + datetime.now().isoformat(' ')).hexdigest()
     user_token = UserToken(user=user, token=token)
     user_token.save()
-    return HttpResponse(json.dumps({'success': True}))
+    return HttpResponse(json.dumps({'success': True, 'token': token}))
 
 
 def logout(request):
