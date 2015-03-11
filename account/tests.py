@@ -42,6 +42,15 @@ class AccountTestCase(TestCase):
         self.assertEqual(data['success'], False)
         self.assertEqual(data['errno'], errno.ERRON_USERNAME_EXIST)
 
+    def test_register_invalid_method(self):
+        response = self.client.put('/account/user/', self.add_secret({
+            'username': 'exist_name',
+            'password': 'password'}))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['errno'], errno.ERROR_INVALID_REQUEST_METHOD)
+
     def test_login(self):
         pass
 

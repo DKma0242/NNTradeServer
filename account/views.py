@@ -4,25 +4,25 @@ from datetime import datetime
 from django.http import HttpResponse
 from django.contrib import auth
 from django.contrib.auth.models import User
-from auth.auth import authenticate
+from auth.auth import authenticate, request_filter
 from erron import errno
 from models import UserToken
 
 
+@request_filter(['POST'])
 @authenticate
 def view_user(request):
     if request.method == 'POST':
         return register(request)
-    return errno.response_invalid_request_method()
 
 
+@request_filter(['POST', 'DELETE'])
 @authenticate
 def view_token(request):
     if request.method == 'POST':
         return login(request)
     if request.method == 'DELETE':
         return logout(request)
-    return errno.response_invalid_request_method()
 
 
 def register(request):

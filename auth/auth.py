@@ -17,7 +17,7 @@ def get_dict_md5(data, secret_key):
 
 def authenticate(view):
     @wraps(view)
-    def wrapper(request):
+    def wrapper(request, *args, **kwargs):
         if request.method == 'GET':
             data = request.GET
         elif request.method == 'POST':
@@ -40,5 +40,16 @@ def authenticate(view):
         secret_md5 = get_dict_md5(data, secret_key)
         if secret_md5 != data['secret']:
             return errno.response_with_erron(errno.ERROR_AUTHENTICATE)
-        return view(request)
+        return view(request, *args, **kwargs)
+    return wrapper
+
+
+def request_filter(accept):
+    def wrapper(view):
+        @wraps(view)
+        def view_wrapper(request, *args, **kwargs):
+            if request.method not in accept:
+                return errno.response_invalid_request_method()
+            return view(request, *args, **kwargs)
+        return view_wrapper
     return wrapper
