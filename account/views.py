@@ -61,6 +61,8 @@ def login(request):
 
 
 def logout(request):
+    if 'username' not in request.DELETE:
+        return errno.response_missing_parameter()
     if 'token' not in request.DELETE:
         return errno.response_missing_parameter()
     token = request.DELETE['token']

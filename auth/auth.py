@@ -1,3 +1,4 @@
+import ast
 import hashlib
 import operator
 from collections import OrderedDict
@@ -23,10 +24,10 @@ def authenticate(view):
         elif request.method == 'POST':
             data = request.POST
         elif request.method == 'PUT':
-            request.PUT = QueryDict(request.body)
+            request.PUT = ast.literal_eval(request.body)
             data = request.PUT
         elif request.method == 'DELETE':
-            request.DELETE = QueryDict(request.body)
+            request.DELETE = ast.literal_eval(request.body)
             data = request.DELETE
         else:
             return errno.response_with_erron(errno.ERRON_INVALID_REQUEST_METHOD)
