@@ -4,7 +4,7 @@ from datetime import datetime
 from django.http import HttpResponse
 from django.contrib import auth
 from django.contrib.auth.models import User
-from auth.auth import authenticate, request_filter
+from auth.auth import authenticate, request_filter, request_parameter
 from erron import errno
 from models import UserToken
 
@@ -25,11 +25,8 @@ def view_token(request):
         return logout(request)
 
 
+@request_parameter(['username', 'password'])
 def register(request):
-    if 'username' not in request.POST:
-        return errno.response_missing_parameter()
-    if 'password' not in request.POST:
-        return errno.response_missing_parameter()
     username = request.POST['username']
     if User.objects.filter(username=username).count() > 0:
         return errno.response_with_erron(errno.ERRON_USERNAME_EXIST)
@@ -42,11 +39,8 @@ def register(request):
     return HttpResponse(json.dumps({'success': True}))
 
 
+@request_parameter(['username', 'password'])
 def login(request):
-    if 'username' not in request.POST:
-        return errno.response_missing_parameter()
-    if 'password' not in request.POST:
-        return errno.response_missing_parameter()
     username = request.POST['username']
     if User.objects.filter(username=username).count() == 0:
         return errno.response_with_erron(errno.ERRON_USERNAME_NON_EXIST)
@@ -60,11 +54,8 @@ def login(request):
     return HttpResponse(json.dumps({'success': True, 'token': token}))
 
 
+@request_parameter(['username', 'token'])
 def logout(request):
-    if 'username' not in request.DELETE:
-        return errno.response_missing_parameter()
-    if 'token' not in request.DELETE:
-        return errno.response_missing_parameter()
     token = request.DELETE['token']
     UserToken.objects.filter(token=token).delete()
     return HttpResponse(json.dumps({'success': True}))

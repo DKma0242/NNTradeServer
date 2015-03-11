@@ -51,6 +51,14 @@ class AccountTestCase(TestCase):
         self.assertEqual(data['success'], False)
         self.assertEqual(data['errno'], errno.ERROR_INVALID_REQUEST_METHOD)
 
+    def test_register_missing_parameter(self):
+        response = self.client.post('/account/user/', self.add_secret({
+            'username': 'exist_name'}))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['errno'], errno.ERROR_MISSING_PARAMETER)
+
     def test_login_normal(self):
         response = self.client.post('/account/user/', self.add_secret({
             'username': 'login_name',
