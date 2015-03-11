@@ -6,18 +6,21 @@ from auth.auth import get_dict_md5
 from erron import errno
 
 
-class AccountTestCase(TestCase):
-
-    def setUp(self):
-        self.key = 'test_key'
-        self.secret_key = 'test_secret_key'
-        AuthKey(key=self.key, secret=self.secret_key).save()
-        self.client = Client()
+class AuthTestCase(TestCase):
 
     def add_secret(self, data):
         data['key'] = self.key
         data['secret'] = get_dict_md5(data, self.secret_key)
         return data
+
+
+class RegisterTestCase(AuthTestCase):
+
+    def setUp(self):
+        self.client = Client()
+        self.key = 'test_key'
+        self.secret_key = 'test_secret_key'
+        AuthKey(key=self.key, secret=self.secret_key).save()
 
     def test_register_normal(self):
         response = self.client.post('/account/user/', self.add_secret({
@@ -59,13 +62,63 @@ class AccountTestCase(TestCase):
         self.assertEqual(data['success'], False)
         self.assertEqual(data['errno'], errno.ERROR_MISSING_PARAMETER)
 
-    def test_login_normal(self):
+
+class DeleteTestCase(AuthTestCase):
+
+    def setUp(self):
+        self.client = Client()
+        self.key = 'test_key'
+        self.secret_key = 'test_secret_key'
+        AuthKey(key=self.key, secret=self.secret_key).save()
+        response = self.client.post('/account/user/', self.add_secret({
+            'username': 'delete_name',
+            'password': 'password'}))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(data['success'], True)
+
+    def test_delete_normal(self):
+        response = self.client.delete('/account/user/', self.add_secret({
+            'username': 'delete_name',
+            'password': 'password'}))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(data['success'], True)
+
+    def test_delete_non_exist(self):
+        response = self.client.delete('/account/user/', self.add_secret({
+            'username': 'delete_name_non',
+            'password': 'password'}))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['errno'], errno.ERRON_USERNAME_NON_EXIST)
+
+    def test_delete_mismatch(self):
+        response = self.client.delete('/account/user/', self.add_secret({
+            'username': 'delete_name',
+            'password': 'mismatch'}))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['errno'], errno.ERRON_MISMATCH_USERNAME_PASSWORD)
+
+
+class LoginTestCase(AuthTestCase):
+
+    def setUp(self):
+        self.client = Client()
+        self.key = 'test_key'
+        self.secret_key = 'test_secret_key'
+        AuthKey(key=self.key, secret=self.secret_key).save()
         response = self.client.post('/account/user/', self.add_secret({
             'username': 'login_name',
             'password': 'password'}))
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
         self.assertEqual(data['success'], True)
+
+    def test_login_normal(self):
         response = self.client.post('/account/token/', self.add_secret({
             'username': 'login_name',
             'password': 'password'}))
@@ -75,12 +128,6 @@ class AccountTestCase(TestCase):
         self.assertEqual('token' in data.keys(), True)
 
     def test_login_non_exist(self):
-        response = self.client.post('/account/user/', self.add_secret({
-            'username': 'login_name',
-            'password': 'password'}))
-        self.assertEqual(response.status_code, 200)
-        data = json.loads(response.content)
-        self.assertEqual(data['success'], True)
         response = self.client.post('/account/token/', self.add_secret({
             'username': 'login_name_non_exist',
             'password': 'password'}))
@@ -90,12 +137,6 @@ class AccountTestCase(TestCase):
         self.assertEqual(data['errno'], errno.ERRON_USERNAME_NON_EXIST)
 
     def test_login_mismatch_password(self):
-        response = self.client.post('/account/user/', self.add_secret({
-            'username': 'login_name',
-            'password': 'password'}))
-        self.assertEqual(response.status_code, 200)
-        data = json.loads(response.content)
-        self.assertEqual(data['success'], True)
         response = self.client.post('/account/token/', self.add_secret({
             'username': 'login_name',
             'password': 'password_mismatch'}))
@@ -104,7 +145,14 @@ class AccountTestCase(TestCase):
         self.assertEqual(data['success'], False)
         self.assertEqual(data['errno'], errno.ERRON_MISMATCH_USERNAME_PASSWORD)
 
-    def test_logout_normal(self):
+
+class LogoutTestCase(AuthTestCase):
+
+    def setUp(self):
+        self.client = Client()
+        self.key = 'test_key'
+        self.secret_key = 'test_secret_key'
+        AuthKey(key=self.key, secret=self.secret_key).save()
         response = self.client.post('/account/user/', self.add_secret({
             'username': 'login_name',
             'password': 'password'}))
@@ -118,28 +166,17 @@ class AccountTestCase(TestCase):
         data = json.loads(response.content)
         self.assertEqual(data['success'], True)
         self.assertEqual('token' in data.keys(), True)
-        token = data['token']
+        self.token = data['token']
+
+    def test_logout_normal(self):
         response = self.client.delete('/account/token/', self.add_secret({
             'username': 'login_name',
-            'token': token}))
+            'token': self.token}))
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
         self.assertEqual(data['success'], True)
 
     def test_logout_invalid_token(self):
-        response = self.client.post('/account/user/', self.add_secret({
-            'username': 'login_name',
-            'password': 'password'}))
-        self.assertEqual(response.status_code, 200)
-        data = json.loads(response.content)
-        self.assertEqual(data['success'], True)
-        response = self.client.post('/account/token/', self.add_secret({
-            'username': 'login_name',
-            'password': 'password'}))
-        self.assertEqual(response.status_code, 200)
-        data = json.loads(response.content)
-        self.assertEqual(data['success'], True)
-        self.assertEqual('token' in data.keys(), True)
         response = self.client.delete('/account/token/', self.add_secret({
             'username': 'login_name',
             'token': 'Invalid token'}))
