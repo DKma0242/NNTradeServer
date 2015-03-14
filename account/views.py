@@ -10,7 +10,6 @@ from models import UserToken
 
 
 @request_filter(['POST', 'DELETE'])
-@authenticate
 def view_user(request):
     if request.method == 'POST':
         return register(request)
@@ -19,7 +18,6 @@ def view_user(request):
 
 
 @request_filter(['POST', 'DELETE'])
-@authenticate
 def view_token(request):
     if request.method == 'POST':
         return login(request)
