@@ -6,12 +6,11 @@ from functools import wraps
 from django.contrib.auth.models import User
 from erron import errno
 from account.models import UserToken
-from models import AuthKey
 
 
-def get_dict_md5(data, secret_key):
+def get_dict_md5(data, token):
     sorted_data = data.copy()
-    sorted_data['secret'] = secret_key
+    sorted_data['token'] = token
     sorted_data = OrderedDict(sorted(sorted_data.items(), key=operator.itemgetter(0)))
     text = '&'.join([key + '=' + value for key, value in sorted_data.items()])
     return hashlib.md5(text).hexdigest()
@@ -33,38 +32,25 @@ def init_rest(request):
             request.data = ast.literal_eval(request.body)
 
 
-def authenticate(view):
-    @wraps(view)
-    def wrapper(request, *args, **kwargs):
-        init_rest(request)
-        if 'key' not in request.data.keys() or 'secret' not in request.data.keys():
-            return errno.response_with_erron(errno.ERROR_MISSING_PARAMETER)
-        key = request.data['key']
-        auth = AuthKey.objects.get(key=key)
-        if auth is None:
-            return errno.response_with_erron(errno.ERROR_AUTHENTICATE)
-        secret_key = auth.secret
-        secret_md5 = get_dict_md5(request.data, secret_key)
-        if secret_md5 != request.data['secret']:
-            return errno.response_with_erron(errno.ERROR_AUTHENTICATE)
-        return view(request, *args, **kwargs)
-    return wrapper
-
-
 def request_login(view):
     @wraps(view)
     def wrapper(request, *args, **kwargs):
         init_rest(request)
         if 'username' not in request.data.keys() or 'token' not in request.data.keys():
-            return errno.response_with_erron(errno.ERROR_MISSING_PARAMETER)
+            return errno.response_with_erron(errno.ERRNO_MISSING_PARAMETER)
         username = request.data['username']
         user = User.objects.filter(username=username)
         if user.count() == 0:
-            return errno.response_with_erron(errno.ERRON_MISMATCH_TOKEN)
+            return errno.response_with_erron(errno.ERRNO_USERNAME_NON_EXIST)
         user = user[0]
-        token = request.data['token']
-        if UserToken.objects.filter(user=user, token=token).count() == 0:
-            return errno.response_with_erron(errno.ERRON_MISMATCH_TOKEN)
+        user_token = UserToken.objects.filter(user=user)
+        if user_token.count() == 0:
+            return errno.response_with_erron(errno.ERRNO_NO_TOKEN)
+        real_token = user_token[0].token
+        encrypt_token = get_dict_md5(request.data, real_token)
+        sent_token = request.data['token']
+        if sent_token != encrypt_token:
+            return errno.response_with_erron(errno.ERRNO_MISMATCH_TOKEN)
         return view(request, *args, **kwargs)
     return wrapper
 
@@ -74,7 +60,7 @@ def request_filter(accept):
         @wraps(view)
         def view_wrapper(request, *args, **kwargs):
             if request.method not in accept:
-                return errno.response_with_erron(errno.ERROR_INVALID_REQUEST_METHOD)
+                return errno.response_with_erron(errno.ERRNO_INVALID_REQUEST_METHOD)
             return view(request, *args, **kwargs)
         return view_wrapper
     return wrapper
@@ -87,7 +73,7 @@ def request_parameter(keys):
             init_rest(request)
             for key in keys:
                 if key not in request.data.keys():
-                    return errno.response_with_erron(errno.ERROR_MISSING_PARAMETER)
+                    return errno.response_with_erron(errno.ERRNO_MISSING_PARAMETER)
             return view(request, *args, **kwargs)
         return view_wrapper
     return wrapper

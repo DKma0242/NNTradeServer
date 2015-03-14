@@ -4,7 +4,7 @@ from datetime import datetime
 from django.http import HttpResponse
 from django.contrib import auth
 from django.contrib.auth.models import User
-from auth.auth import authenticate, request_filter, request_parameter, request_login
+from auth.auth import request_filter, request_parameter, request_login
 from erron import errno
 from models import UserToken
 
@@ -29,7 +29,7 @@ def view_token(request):
 def register(request):
     username = request.data['username']
     if User.objects.filter(username=username).count() > 0:
-        return errno.response_with_erron(errno.ERRON_USERNAME_EXIST)
+        return errno.response_with_erron(errno.ERRNO_USERNAME_EXIST)
     password = request.data['password']
     user = User.objects.create_user(username=username,
                                     password=password,
@@ -43,11 +43,11 @@ def register(request):
 def delete(request):
     username = request.data['username']
     if User.objects.filter(username=username).count() == 0:
-        return errno.response_with_erron(errno.ERRON_USERNAME_NON_EXIST)
+        return errno.response_with_erron(errno.ERRNO_USERNAME_NON_EXIST)
     password = request.data['password']
     user = auth.authenticate(username=username, password=password)
     if user is None:
-        return errno.response_with_erron(errno.ERRON_MISMATCH_USERNAME_PASSWORD)
+        return errno.response_with_erron(errno.ERRNO_MISMATCH_USERNAME_PASSWORD)
     user.delete()
     return HttpResponse(json.dumps({'success': True}))
 
@@ -56,11 +56,11 @@ def delete(request):
 def login(request):
     username = request.data['username']
     if User.objects.filter(username=username).count() == 0:
-        return errno.response_with_erron(errno.ERRON_USERNAME_NON_EXIST)
+        return errno.response_with_erron(errno.ERRNO_USERNAME_NON_EXIST)
     password = request.data['password']
     user = auth.authenticate(username=username, password=password)
     if user is None:
-        return errno.response_with_erron(errno.ERRON_MISMATCH_USERNAME_PASSWORD)
+        return errno.response_with_erron(errno.ERRNO_MISMATCH_USERNAME_PASSWORD)
     token = hashlib.md5(username + datetime.now().isoformat(' ')).hexdigest()
     user_token = UserToken(user=user)
     user_token.token = token
@@ -68,7 +68,7 @@ def login(request):
     return HttpResponse(json.dumps({'success': True, 'token': token}))
 
 
-@request_parameter(['username', 'token'])
+@request_parameter(['username'])
 @request_login
 def logout(request):
     token = request.data['token']

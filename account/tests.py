@@ -1,16 +1,14 @@
 import json
 from django.test import TestCase
 from django.test.client import Client
-from auth.models import AuthKey
 from auth.auth import get_dict_md5
 from erron import errno
 
 
 class AuthTestCase(TestCase):
 
-    def add_secret(self, data):
-        data['key'] = self.key
-        data['secret'] = get_dict_md5(data, self.secret_key)
+    def add_token(self, data, token):
+        data['token'] = get_dict_md5(data, token)
         return data
 
 
@@ -18,9 +16,6 @@ class RegisterTestCase(AuthTestCase):
 
     def setUp(self):
         self.client = Client()
-        self.key = 'test_key'
-        self.secret_key = 'test_secret_key'
-        AuthKey(key=self.key, secret=self.secret_key).save()
 
     def test_register_normal(self):
         response = self.client.post('/account/user/', {'username': 'normal_name',
@@ -40,7 +35,7 @@ class RegisterTestCase(AuthTestCase):
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
         self.assertFalse(data['success'])
-        self.assertEqual(data['errno'], errno.ERRON_USERNAME_EXIST)
+        self.assertEqual(data['errno'], errno.ERRNO_USERNAME_EXIST)
 
     def test_register_invalid_method(self):
         response = self.client.put('/account/user/', {'username': 'exist_name',
@@ -48,23 +43,20 @@ class RegisterTestCase(AuthTestCase):
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
         self.assertFalse(data['success'])
-        self.assertEqual(data['errno'], errno.ERROR_INVALID_REQUEST_METHOD)
+        self.assertEqual(data['errno'], errno.ERRNO_INVALID_REQUEST_METHOD)
 
     def test_register_missing_parameter(self):
         response = self.client.post('/account/user/', {'username': 'exist_name'})
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
         self.assertFalse(data['success'])
-        self.assertEqual(data['errno'], errno.ERROR_MISSING_PARAMETER)
+        self.assertEqual(data['errno'], errno.ERRNO_MISSING_PARAMETER)
 
 
 class DeleteTestCase(AuthTestCase):
 
     def setUp(self):
         self.client = Client()
-        self.key = 'test_key'
-        self.secret_key = 'test_secret_key'
-        AuthKey(key=self.key, secret=self.secret_key).save()
         response = self.client.post('/account/user/', {'username': 'delete_name',
                                                        'password': 'password'})
         self.assertEqual(response.status_code, 200)
@@ -84,7 +76,7 @@ class DeleteTestCase(AuthTestCase):
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
         self.assertFalse(data['success'])
-        self.assertEqual(data['errno'], errno.ERRON_USERNAME_NON_EXIST)
+        self.assertEqual(data['errno'], errno.ERRNO_USERNAME_NON_EXIST)
 
     def test_delete_mismatch(self):
         response = self.client.delete('/account/user/', {'username': 'delete_name',
@@ -92,16 +84,13 @@ class DeleteTestCase(AuthTestCase):
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
         self.assertFalse(data['success'])
-        self.assertEqual(data['errno'], errno.ERRON_MISMATCH_USERNAME_PASSWORD)
+        self.assertEqual(data['errno'], errno.ERRNO_MISMATCH_USERNAME_PASSWORD)
 
 
 class LoginTestCase(AuthTestCase):
 
     def setUp(self):
         self.client = Client()
-        self.key = 'test_key'
-        self.secret_key = 'test_secret_key'
-        AuthKey(key=self.key, secret=self.secret_key).save()
         response = self.client.post('/account/user/', {'username': 'login_name',
                                                        'password': 'password'})
         self.assertEqual(response.status_code, 200)
@@ -122,7 +111,7 @@ class LoginTestCase(AuthTestCase):
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
         self.assertFalse(data['success'])
-        self.assertEqual(data['errno'], errno.ERRON_USERNAME_NON_EXIST)
+        self.assertEqual(data['errno'], errno.ERRNO_USERNAME_NON_EXIST)
 
     def test_login_mismatch_password(self):
         response = self.client.post('/account/token/', {'username': 'login_name',
@@ -130,7 +119,7 @@ class LoginTestCase(AuthTestCase):
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
         self.assertFalse(data['success'])
-        self.assertEqual(data['errno'], errno.ERRON_MISMATCH_USERNAME_PASSWORD)
+        self.assertEqual(data['errno'], errno.ERRNO_MISMATCH_USERNAME_PASSWORD)
 
     def test_login_multiple(self):
         response = self.client.post('/account/token/', {'username': 'login_name',
@@ -154,9 +143,6 @@ class LogoutTestCase(AuthTestCase):
 
     def setUp(self):
         self.client = Client()
-        self.key = 'test_key'
-        self.secret_key = 'test_secret_key'
-        AuthKey(key=self.key, secret=self.secret_key).save()
         response = self.client.post('/account/user/', {'username': 'login_name',
                                                        'password': 'password'})
         self.assertEqual(response.status_code, 200)
@@ -171,17 +157,42 @@ class LogoutTestCase(AuthTestCase):
         self.token = data['token']
 
     def test_logout_normal(self):
-        response = self.client.delete('/account/token/', {'username': 'login_name',
-                                                          'token': self.token})
+        response = self.client.delete('/account/token/', self.add_token({'username': 'login_name'}, self.token))
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
         self.assertTrue(data['success'])
 
-    def test_logout_invalid_token(self):
-        response = self.client.delete('/account/token/', {'username': 'login_name',
-                                                          'token': 'Invalid token'})
+    def test_logout_missing_parameter(self):
+        response = self.client.delete('/account/token/', {'username': 'login_name'}, 'Invalid Token')
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
         self.assertFalse(data['success'])
-        self.assertEqual(data['errno'], errno.ERRON_MISMATCH_TOKEN)
+        self.assertEqual(data['errno'], errno.ERRNO_MISSING_PARAMETER)
+
+    def test_logout_non_exist(self):
+        response = self.client.delete('/account/token/', self.add_token({'username': 'non_name'}, self.token))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertFalse(data['success'])
+        self.assertEqual(data['errno'], errno.ERRNO_USERNAME_NON_EXIST)
+
+    def test_logout_no_token(self):
+        self.client = Client()
+        response = self.client.post('/account/user/', {'username': 'non_login',
+                                                       'password': 'password'})
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertTrue(data['success'])
+        response = self.client.delete('/account/token/', self.add_token({'username': 'non_login'}, self.token))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertFalse(data['success'])
+        self.assertEqual(data['errno'], errno.ERRNO_NO_TOKEN)
+
+    def test_logout_invalid_token(self):
+        response = self.client.delete('/account/token/', self.add_token({'username': 'login_name'}, 'Invalid Token'))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertFalse(data['success'])
+        self.assertEqual(data['errno'], errno.ERRNO_MISMATCH_TOKEN)
 
