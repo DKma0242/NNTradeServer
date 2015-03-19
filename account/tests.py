@@ -1,8 +1,8 @@
 import json
 from django.test import TestCase
 from django.test.client import Client
-from auth.auth import get_dict_md5
-from erron import errno
+from filter.filter import get_dict_md5
+from errno import errno
 
 
 class AuthTestCase(TestCase):

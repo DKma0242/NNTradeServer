@@ -4,7 +4,7 @@ import operator
 from collections import OrderedDict
 from functools import wraps
 from django.contrib.auth.models import User
-from erron import errno
+from errno import errno
 from account.models import UserToken
 
 

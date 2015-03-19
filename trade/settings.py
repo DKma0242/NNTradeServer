@@ -16,8 +16,8 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'erron',
-    'auth',
+    'errno',
+    'filter',
     'account',
 )
 
