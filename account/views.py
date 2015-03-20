@@ -62,7 +62,7 @@ def login(request):
     if user is None:
         return errno.response_with_erron(errno.ERRNO_MISMATCH_USERNAME_PASSWORD)
     token = hashlib.md5(username + datetime.now().isoformat(' ')).hexdigest()
-    user_token = UserToken(user=user)
+    user_token = UserToken.objects.get_or_create(user=user)[0]
     user_token.token = token
     user_token.save()
     return HttpResponse(json.dumps({'success': True, 'token': token}))
