@@ -78,3 +78,16 @@ def request_parameter(keys):
             return view(request, *args, **kwargs)
         return view_wrapper
     return wrapper
+
+
+def allow_empty(keys):
+    def wrapper(view):
+        @wraps(view)
+        def view_wrapper(request, *args, **kwargs):
+            init_rest(request)
+            for key in keys:
+                if key not in request.data.keys():
+                    request.data[key] = ''
+            return view(request, *args, **kwargs)
+        return view_wrapper
+    return wrapper

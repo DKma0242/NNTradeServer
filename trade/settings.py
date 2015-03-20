@@ -18,7 +18,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'account',
     'errnos',
-    'filters',
+    'wrappers',
     'images',
     'sells',
 )

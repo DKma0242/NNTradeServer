@@ -1,7 +1,7 @@
 import json
 from django.test import TestCase
 from django.test.client import Client
-from filters.filter import get_dict_md5
+from wrappers.filter import get_dict_md5
 from errnos import errno
 
 
