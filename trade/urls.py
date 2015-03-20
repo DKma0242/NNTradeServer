@@ -4,4 +4,5 @@ urlpatterns = patterns(
     '',
     url(r'^account/', include('account.urls')),
     url(r'^image/', include('images.urls')),
+    url(r'^sell/', include('sells.urls')),
 )

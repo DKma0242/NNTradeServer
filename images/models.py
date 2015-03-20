@@ -7,4 +7,9 @@ class Image(models.Model):
 
 
 class ImageSet(models.Model):
-    image = models.ForeignKey(models)
+    pass
+
+
+class ImageImageSet(models.Model):
+    image_set = models.ForeignKey(ImageSet)
+    image = models.ForeignKey(Image)
