@@ -71,6 +71,5 @@ def login(request):
 @request_parameter(['username'])
 @request_login
 def logout(request):
-    token = request.data['token']
-    UserToken.objects.filter(token=token).delete()
+    UserToken.objects.filter(user=request.user).delete()
     return HttpResponse(json.dumps({'success': True}))

@@ -51,6 +51,7 @@ def request_login(view):
         sent_token = request.data['token']
         if sent_token != encrypt_token:
             return errno.response_with_erron(errno.ERRNO_MISMATCH_TOKEN)
+        request.user = user
         return view(request, *args, **kwargs)
     return wrapper
 
