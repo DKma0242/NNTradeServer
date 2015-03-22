@@ -1,6 +1,6 @@
 import json
 from django.http import HttpResponse
-from wrappers.filter import request_filter, request_parameter, request_login, allow_empty
+from wrappers.wrapper import request_filter, request_parameter, request_login, allow_empty
 from images.image_set import create_image_set, update_image_set
 from errnos import errno
 from models import PostSell
@@ -27,11 +27,13 @@ def view_new_post(request):
 @request_parameter(['username'])
 @request_login
 @allow_empty(['title', 'description', 'images'])
-def view_update_post(request, sell_post_id):
-    post = PostSell.objects.filter(id=sell_post_id)
+def view_update_post(request, post_sell_id):
+    post = PostSell.objects.filter(id=int(post_sell_id))
     if post.count() != 1:
         return errno.response_with_erron(errno.ERRNO_NOT_EXIST)
     post = post[0]
+    if post.user.id != request.user.id:
+        return errno.response_with_erron(errno.ERRNO_NOT_OWNER)
     post.title = request.data['title']
     post.description = request.data['description']
     image_id_list = []

@@ -1,5 +1,5 @@
 from django.http import HttpResponse
-from wrappers.filter import request_filter, request_parameter, request_login
+from wrappers.wrapper import request_filter, request_parameter, request_login
 
 
 @request_filter(['POST', 'GET'])

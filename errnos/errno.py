@@ -14,6 +14,7 @@ ERRNO_NO_TOKEN = -1003
 ERRNO_MISMATCH_TOKEN = -1004
 
 ERRNO_NOT_EXIST = -2000
+ERRNO_NOT_OWNER = -2001
 
 
 def response_with_erron(erron):
