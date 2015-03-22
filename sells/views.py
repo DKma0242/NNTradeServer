@@ -32,6 +32,17 @@ def view_post(request, post_sell_id):
         return view_delete_post(request, post_sell_id)
 
 
+def format_post_data(post):
+    return {
+        'title': post.title,
+        'description': post.description,
+        'user': post.user.id,
+        'image_set': post.image_set.id,
+        'post_date': post.post_date.strftime("%Y-%m-%d %H:%M:%S"),
+        'modify_date': post.modify_date.strftime("%Y-%m-%d %H:%M:%S"),
+    }
+
+
 def view_get_post(post_sell_id):
     post = PostSell.objects.filter(id=int(post_sell_id))
     if post.count() != 1:
@@ -39,12 +50,7 @@ def view_get_post(post_sell_id):
     post = post[0]
     data = {
         'success': True,
-        'title': post.title,
-        'description': post.description,
-        'user': post.user.id,
-        'image_set': post.image_set.id,
-        'post_date': post.post_date.strftime("%Y-%m-%d %H:%M:%S"),
-        'modify_date': post.modify_date.strftime("%Y-%m-%d %H:%M:%S"),
+        'post': format_post_data(post)
     }
     return HttpResponse(json.dumps(data))
 
@@ -78,3 +84,15 @@ def view_delete_post(request, post_sell_id):
         return errno.response_with_erron(errno.ERRNO_NOT_OWNER)
     post.delete()
     return HttpResponse(json.dumps({'success': True}))
+
+
+@request_filter(['GET'])
+def view_posts(request, page_num):
+    if page_num <= 0:
+        return errno.response_with_erron(errno.ERRNO_WRONG_PAGE_NUM)
+    posts = PostSell.objects.order_by('post_date')[(page_num - 1) * 20:page_num * 20 - 1]
+    data = {
+        'success': True,
+        'posts': [format_post_data(post) for post in posts],
+    }
+    return HttpResponse(json.dumps(data))

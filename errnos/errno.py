@@ -15,6 +15,7 @@ ERRNO_MISMATCH_TOKEN = -1004
 
 ERRNO_NOT_EXIST = -2000
 ERRNO_NOT_OWNER = -2001
+ERRNO_WRONG_PAGE_NUM = -2002
 
 
 def response_with_erron(erron):
