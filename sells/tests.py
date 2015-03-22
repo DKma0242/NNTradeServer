@@ -58,12 +58,12 @@ class NewSellPostTestCase(AuthTestCase):
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
         self.assertTrue(data['success'])
-        self.assertEquals(data['title'], 'Sell Title')
-        self.assertEquals(data['description'], 'New Sell!')
-        self.assertTrue('user' in data.keys())
-        self.assertTrue('image_set' in data.keys())
-        self.assertTrue('post_date' in data.keys())
-        self.assertTrue('modify_date' in data.keys())
+        self.assertEquals(data['post']['title'], 'Sell Title')
+        self.assertEquals(data['post']['description'], 'New Sell!')
+        self.assertTrue('user' in data['post'].keys())
+        self.assertTrue('image_set' in data['post'].keys())
+        self.assertTrue('post_date' in data['post'].keys())
+        self.assertTrue('modify_date' in data['post'].keys())
 
     def test_empty_allowed_field(self):
         self.login_test_user('login_name', '123456')
@@ -129,8 +129,8 @@ class UpdateSellPostTestCase(AuthTestCase):
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
         self.assertTrue(data['success'])
-        self.assertEquals(data['title'], 'New Title')
-        self.assertEquals(data['description'], 'New description')
+        self.assertEquals(data['post']['title'], 'New Title')
+        self.assertEquals(data['post']['description'], 'New description')
 
     def test_update_allow_empty(self):
         self.login_test_user('login_name', '123456')
@@ -342,3 +342,43 @@ class DeleteSellPostTestCase(AuthTestCase):
         data = json.loads(response.content)
         self.assertFalse(data['success'])
         self.assertEqual(data['errno'], errno.ERRNO_NO_TOKEN)
+
+
+class GetSellPostsTestCase(AuthTestCase):
+
+    def setUp(self):
+        self.client = Client()
+        self.login_test_user('login_name', '123456')
+        for i in range(100):
+            self.create_post('title_' + str(i))
+        self.logout_test_user()
+
+    def create_post(self, title):
+        response = self.client.post('/sell/post/', self.add_token(
+            {
+                'username': 'login_name',
+                'title': title,
+            }, self.token))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertTrue(data['success'])
+        self.assertTrue('id' in data.keys())
+        return data['id']
+
+    def test_get_posts_normal(self):
+        response = self.client.get('/sell/posts/1/')
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertTrue(data['success'])
+        self.assertTrue('posts' in data.keys())
+        self.assertTrue(data['posts'][0]['title'], 'title_99')
+        self.assertTrue(data['posts'][1]['title'], 'title_98')
+
+    def test_get_posts_zero_page_num(self):
+        response = self.client.get('/sell/posts/0/')
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertTrue(data['success'])
+        self.assertTrue('posts' in data.keys())
+        self.assertTrue(data['posts'][0]['title'], 'title_99')
+        self.assertTrue(data['posts'][1]['title'], 'title_98')

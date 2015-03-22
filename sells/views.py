@@ -88,8 +88,9 @@ def view_delete_post(request, post_sell_id):
 
 @request_filter(['GET'])
 def view_posts(request, page_num):
-    if page_num <= 0:
-        return errno.response_with_erron(errno.ERRNO_WRONG_PAGE_NUM)
+    page_num = int(page_num)
+    if page_num == 0:
+        page_num = 1
     posts = PostSell.objects.order_by('post_date')[(page_num - 1) * 20:page_num * 20 - 1]
     data = {
         'success': True,
