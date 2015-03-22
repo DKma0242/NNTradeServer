@@ -25,25 +25,26 @@ def view_new_post(request):
 @request_filter(['GET', 'PUT', 'DELETE'])
 def view_post(request, post_sell_id):
     if request.method == 'GET':
-        return view_get_post(request, post_sell_id)
+        return view_get_post(post_sell_id)
     if request.method == 'PUT':
         return view_update_post(request, post_sell_id)
     if request.method == 'DELETE':
         return view_delete_post(request, post_sell_id)
 
 
-def view_get_post(request, post_sell_id):
+def view_get_post(post_sell_id):
     post = PostSell.objects.filter(id=int(post_sell_id))
     if post.count() != 1:
         return errno.response_with_erron(errno.ERRNO_NOT_EXIST)
+    post = post[0]
     data = {
         'success': True,
         'title': post.title,
         'description': post.description,
         'user': post.user.id,
         'image_set': post.image_set.id,
-        'post_date': post.post_date,
-        'modify_date': post.modify_date,
+        'post_date': post.post_date.strftime("%Y-%m-%d %H:%M:%S"),
+        'modify_date': post.modify_date.strftime("%Y-%m-%d %H:%M:%S"),
     }
     return HttpResponse(json.dumps(data))
 

@@ -53,6 +53,17 @@ class NewSellPostTestCase(AuthTestCase):
         data = json.loads(response.content)
         self.assertTrue(data['success'])
         self.assertTrue('id' in data.keys())
+        post_id = data['id']
+        response = self.client.get('/sell/post/' + str(post_id) + '/')
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertTrue(data['success'])
+        self.assertEquals(data['title'], 'Sell Title')
+        self.assertEquals(data['description'], 'New Sell!')
+        self.assertTrue('user' in data.keys())
+        self.assertTrue('image_set' in data.keys())
+        self.assertTrue('post_date' in data.keys())
+        self.assertTrue('modify_date' in data.keys())
 
     def test_empty_allowed_field(self):
         self.login_test_user('login_name', '123456')
@@ -114,6 +125,12 @@ class UpdateSellPostTestCase(AuthTestCase):
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
         self.assertTrue(data['success'])
+        response = self.client.get('/sell/post/' + str(post_id) + '/')
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertTrue(data['success'])
+        self.assertEquals(data['title'], 'New Title')
+        self.assertEquals(data['description'], 'New description')
 
     def test_update_allow_empty(self):
         self.login_test_user('login_name', '123456')
@@ -238,6 +255,11 @@ class DeleteSellPostTestCase(AuthTestCase):
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
         self.assertTrue(data['success'])
+        response = self.client.get('/sell/post/' + str(post_id) + '/')
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertFalse(data['success'])
+        self.assertEqual(data['errno'], errno.ERRNO_NOT_EXIST)
 
     def test_delete_not_exist(self):
         self.login_test_user('login_name', '123456')
