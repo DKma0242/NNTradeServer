@@ -1,6 +1,6 @@
 import json
 from django.http import HttpResponse
-from wrappers.wrapper import request_filter, request_parameter, request_login, allow_empty
+from wrappers.wrapper import request_filter, request_login, allow_empty
 from images.image_set import create_image_set, update_image_set
 from errnos import errno
 from models import PostSell
@@ -19,7 +19,7 @@ def view_new_post(request):
         image_id_list = request.data['images'].split(',')
     new_post.image_set = create_image_set(image_id_list)
     new_post.save()
-    return HttpResponse(json.dumps({'success': True, 'id': new_post.id}))
+    return HttpResponse(json.dumps({'success': True, 'post_id': new_post.id}))
 
 
 @request_filter(['GET', 'PUT', 'DELETE'])
@@ -34,10 +34,11 @@ def view_post(request, post_sell_id):
 
 def format_post_data(post):
     return {
+        'post_id': post.id,
         'title': post.title,
         'description': post.description,
-        'user': post.user.id,
-        'image_set': post.image_set.id,
+        'user_id': post.user.id,
+        'image_set_id': post.image_set.id,
         'post_date': post.post_date.strftime("%Y-%m-%d %H:%M:%S"),
         'modify_date': post.modify_date.strftime("%Y-%m-%d %H:%M:%S"),
     }

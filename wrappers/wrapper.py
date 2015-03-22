@@ -36,10 +36,10 @@ def request_login(view):
     @wraps(view)
     def wrapper(request, *args, **kwargs):
         init_rest(request)
-        if 'username' not in request.data.keys() or 'token' not in request.data.keys():
+        if 'user_id' not in request.data.keys() or 'token' not in request.data.keys():
             return errno.response_with_erron(errno.ERRNO_MISSING_PARAMETER)
-        username = request.data['username']
-        user = User.objects.filter(username=username)
+        user_id = request.data['user_id']
+        user = User.objects.filter(id=user_id)
         if user.count() == 0:
             return errno.response_with_erron(errno.ERRNO_USERNAME_NON_EXIST)
         user = user[0]
