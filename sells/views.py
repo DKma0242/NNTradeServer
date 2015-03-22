@@ -7,7 +7,6 @@ from models import PostSell
 
 
 @request_filter(['POST'])
-@request_parameter(['username'])
 @request_login
 @allow_empty(['title', 'description', 'images'])
 def view_new_post(request):

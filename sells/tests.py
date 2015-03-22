@@ -25,6 +25,15 @@ class AuthTestCase(TestCase):
         self.assertTrue('token' in data.keys())
         self.token = data['token']
 
+    def logout_test_user(self):
+        response = self.client.delete('/account/token/', self.add_token(
+            {
+                'username': 'login_name'
+            }, self.token))
+        data = json.loads(response.content)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(data['success'])
+
 
 class NewSellPostTestCase(AuthTestCase):
 
@@ -55,6 +64,26 @@ class NewSellPostTestCase(AuthTestCase):
         data = json.loads(response.content)
         self.assertTrue(data['success'])
         self.assertTrue('id' in data.keys())
+
+    def test_no_user_name(self):
+        self.login_test_user('login_name', '123456')
+        response = self.client.post('/sell/post/', self.add_token({}, self.token))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertFalse(data['success'])
+        self.assertEqual(data['errno'], errno.ERRNO_MISSING_PARAMETER)
+
+    def test_not_login(self):
+        self.login_test_user('login_name', '123456')
+        self.logout_test_user()
+        response = self.client.post('/sell/post/', self.add_token(
+            {
+                'username': 'login_name',
+            }, self.token))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertFalse(data['success'])
+        self.assertEqual(data['errno'], errno.ERRNO_NO_TOKEN)
 
 
 class UpdateSellPostTestCase(AuthTestCase):
@@ -155,3 +184,139 @@ class UpdateSellPostTestCase(AuthTestCase):
         data = json.loads(response.content)
         self.assertFalse(data['success'])
         self.assertEqual(data['errno'], errno.ERRNO_NOT_OWNER)
+
+    def test_update_not_login(self):
+        self.login_test_user('login_name', '123456')
+        response = self.client.post('/sell/post/', self.add_token(
+            {
+                'username': 'login_name',
+                'title': 'Sell Title',
+                'description': 'New Sell!',
+                'images': '1,2,3',
+            }, self.token))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertTrue(data['success'])
+        self.assertTrue('id' in data.keys())
+        post_id = data['id']
+        self.logout_test_user()
+        response = self.client.put('/sell/post/' + str(post_id) + '/', self.add_token(
+            {
+                'username': 'login_name',
+                'title': 'New Title',
+                'description': 'New description',
+            }, self.token))
+        self.assertEquals(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertFalse(data['success'])
+        self.assertEqual(data['errno'], errno.ERRNO_NO_TOKEN)
+
+
+class DeleteSellPostTestCase(AuthTestCase):
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_delete_post_normal(self):
+        self.login_test_user('login_name', '123456')
+        response = self.client.post('/sell/post/', self.add_token(
+            {
+                'username': 'login_name',
+                'title': 'Sell Title',
+                'description': 'New Sell!',
+                'images': '1,2,3',
+            }, self.token))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertTrue(data['success'])
+        self.assertTrue('id' in data.keys())
+        post_id = data['id']
+        response = self.client.delete('/sell/post/' + str(post_id) + '/', self.add_token(
+            {
+                'username': 'login_name'
+            }, self.token))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertTrue(data['success'])
+
+    def test_delete_not_exist(self):
+        self.login_test_user('login_name', '123456')
+        response = self.client.post('/sell/post/', self.add_token(
+            {
+                'username': 'login_name',
+                'title': 'Sell Title',
+                'description': 'New Sell!',
+                'images': '1,2,3',
+            }, self.token))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertTrue(data['success'])
+        self.assertTrue('id' in data.keys())
+        post_id = data['id'] + 100
+        response = self.client.delete('/sell/post/' + str(post_id) + '/', self.add_token(
+            {
+                'username': 'login_name'
+            }, self.token))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertFalse(data['success'])
+        self.assertEqual(data['errno'], errno.ERRNO_NOT_EXIST)
+
+    def test_delete_not_owner(self):
+        self.login_test_user('login_name', '123456')
+        response = self.client.post('/sell/post/', self.add_token(
+            {
+                'username': 'login_name',
+                'title': 'Sell Title',
+                'description': 'New Sell!',
+                'images': '1,2,3',
+            }, self.token))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertTrue(data['success'])
+        self.assertTrue('id' in data.keys())
+        post_id = data['id']
+        self.login_test_user('new_login_name', '123456')
+        response = self.client.delete('/sell/post/' + str(post_id) + '/', self.add_token(
+            {
+                'username': 'new_login_name'
+            }, self.token))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertFalse(data['success'])
+        self.assertEqual(data['errno'], errno.ERRNO_NOT_OWNER)
+
+    def test_delete_no_username(self):
+        self.login_test_user('login_name', '123456')
+        response = self.client.post('/sell/post/', self.add_token({
+            'username': 'login_name',
+        }, self.token))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertTrue(data['success'])
+        self.assertTrue('id' in data.keys())
+        post_id = data['id']
+        response = self.client.delete('/sell/post/' + str(post_id) + '/', self.add_token({}, self.token))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertFalse(data['success'])
+        self.assertEqual(data['errno'], errno.ERRNO_MISSING_PARAMETER)
+
+    def test_delete_not_login(self):
+        self.login_test_user('login_name', '123456')
+        response = self.client.post('/sell/post/', self.add_token({
+            'username': 'login_name',
+        }, self.token))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertTrue(data['success'])
+        self.assertTrue('id' in data.keys())
+        post_id = data['id']
+        self.logout_test_user()
+        response = self.client.delete('/sell/post/' + str(post_id) + '/', self.add_token({
+            'username': 'login_name',
+        }, self.token))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertFalse(data['success'])
+        self.assertEqual(data['errno'], errno.ERRNO_NO_TOKEN)
