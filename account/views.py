@@ -1,5 +1,4 @@
 import json
-import hashlib
 from django.http import HttpResponse
 from django.contrib import auth
 from django.contrib.auth.models import User
@@ -20,7 +19,7 @@ def register(request):
                                     email='')
     user.first_name = username
     user.save()
-    UserToken.objects.create(user=user, token=hashlib.md5(password).hexdigest())
+    UserToken.objects.create(user=user, token=password)
     return HttpResponse(json.dumps({'success': True, 'user_id': user.id}))
 
 

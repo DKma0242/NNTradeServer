@@ -14,7 +14,7 @@ class AuthTestCase(TestCase):
 
     def login_test_user(self, username, password):
         response = self.client.post('/account/user/', {'username': username,
-                                                       'password': password})
+                                                       'password': hashlib.md5(password).hexdigest()})
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
         self.assertTrue(data['success'])
