@@ -35,6 +35,7 @@ class NewSellPostTestCase(AuthTestCase):
         response = self.client.post('/sell/post/', self.add_token(
             {
                 'username': 'login_name',
+                'title': 'Sell Title',
                 'description': 'New Sell!',
                 'images': '1,2,3',
             }, self.token))
