@@ -37,7 +37,7 @@ class NewSellPostTestCase(AuthTestCase):
                 'user_id': self.user_id,
                 'title': 'Sell Title',
                 'description': 'New Sell!',
-                'images': '1,2,3',
+                'image_id_list': '1,2,3',
             }, self.token))
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
@@ -66,7 +66,7 @@ class NewSellPostTestCase(AuthTestCase):
                 'user_id': self.user_id,
                 'title': urlquote(title),
                 'description': urlquote(description),
-                'images': '1,2,3',
+                'image_id_list': '1,2,3',
             }, self.token))
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
@@ -117,7 +117,7 @@ class UpdateSellPostTestCase(AuthTestCase):
                 'user_id': self.user_id,
                 'title': 'Sell Title',
                 'description': 'New Sell!',
-                'images': '1,2,3',
+                'image_id_list': '1,2,3',
             }, self.token))
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
@@ -166,7 +166,7 @@ class UpdateSellPostTestCase(AuthTestCase):
                 'user_id': self.user_id,
                 'title': 'Sell Title',
                 'description': 'New Sell!',
-                'images': '1,2,3',
+                'image_id_list': '1,2,3',
             }, self.token))
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
@@ -191,7 +191,7 @@ class UpdateSellPostTestCase(AuthTestCase):
                 'user_id': self.user_id,
                 'title': 'Sell Title',
                 'description': 'New Sell!',
-                'images': '1,2,3',
+                'image_id_list': '1,2,3',
             }, self.token))
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
@@ -217,7 +217,7 @@ class UpdateSellPostTestCase(AuthTestCase):
                 'user_id': self.user_id,
                 'title': 'Sell Title',
                 'description': 'New Sell!',
-                'images': '1,2,3',
+                'image_id_list': '1,2,3',
             }, self.token))
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
@@ -246,7 +246,7 @@ class UpdateSellPostTestCase(AuthTestCase):
                 'user_id': self.user_id,
                 'title': 'Sell Title',
                 'description': 'New Sell!',
-                'images': '1,2,3',
+                'image_id_list': '1,2,3',
             }, self.token))
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
@@ -281,7 +281,7 @@ class DeleteSellPostTestCase(AuthTestCase):
                 'user_id': self.user_id,
                 'title': 'Sell Title',
                 'description': 'New Sell!',
-                'images': '1,2,3',
+                'image_id_list': '1,2,3',
             }, self.token))
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
@@ -308,7 +308,7 @@ class DeleteSellPostTestCase(AuthTestCase):
                 'user_id': self.user_id,
                 'title': 'Sell Title',
                 'description': 'New Sell!',
-                'images': '1,2,3',
+                'image_id_list': '1,2,3',
             }, self.token))
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
@@ -331,7 +331,7 @@ class DeleteSellPostTestCase(AuthTestCase):
                 'user_id': self.user_id,
                 'title': 'Sell Title',
                 'description': 'New Sell!',
-                'images': '1,2,3',
+                'image_id_list': '1,2,3',
             }, self.token))
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)

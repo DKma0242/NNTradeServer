@@ -9,15 +9,15 @@ from models import PostSell
 
 @request_filter(['POST'])
 @request_login
-@allow_empty(['title', 'description', 'images'])
+@allow_empty(['title', 'description', 'image_id_list'])
 def view_new_post(request):
     new_post = PostSell()
     new_post.user = request.user
     new_post.title = urlunquote(request.data['title'])
     new_post.description = urlunquote(request.data['description'])
     image_id_list = []
-    if request.data['images'] != '':
-        image_id_list = request.data['images'].split(',')
+    if request.data['image_id_list'] != '':
+        image_id_list = urlunquote(request.data['image_id_list']).split(',')
     new_post.image_set = create_image_set(image_id_list)
     new_post.save()
     return HttpResponse(json.dumps({'success': True, 'post_id': new_post.id}))
@@ -67,15 +67,15 @@ def view_update_post(request, post_sell_id):
     if post.user.id != request.user.id:
         return errno.response_with_erron(errno.ERRNO_NOT_OWNER)
     if 'title' in request.data.keys():
-        post.title = request.data['title']
+        post.title = urlunquote(request.data['title'])
     if 'description' in request.data.keys():
-        post.description = request.data['description']
+        post.description = urlunquote(request.data['description'])
     if 'is_open' in request.data.keys():
         post.is_open = request.data['is_open'] == 'true'
-    if 'images' in request.data.keys():
+    if 'image_id_list' in request.data.keys():
         image_id_list = []
-        if request.data['images'] != '':
-            image_id_list = request.data['images'].split(',')
+        if request.data['image_id_list'] != '':
+            image_id_list = urlunquote(request.data['image_id_list']).split(',')
         update_image_set(post.image_set.id, image_id_list)
     post.save()
     return HttpResponse(json.dumps({'success': True}))
