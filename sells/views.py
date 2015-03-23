@@ -42,6 +42,7 @@ def format_post_data(post):
         'image_set_id': post.image_set.id,
         'post_date': post.post_date.strftime("%Y-%m-%d %H:%M:%S"),
         'modify_date': post.modify_date.strftime("%Y-%m-%d %H:%M:%S"),
+        'is_open': post.is_open,
     }
 
 
@@ -58,7 +59,6 @@ def view_get_post(post_sell_id):
 
 
 @request_login
-@allow_empty(['title', 'description', 'images'])
 def view_update_post(request, post_sell_id):
     post = PostSell.objects.filter(id=int(post_sell_id))
     if post.count() != 1:
@@ -66,12 +66,17 @@ def view_update_post(request, post_sell_id):
     post = post[0]
     if post.user.id != request.user.id:
         return errno.response_with_erron(errno.ERRNO_NOT_OWNER)
-    post.title = request.data['title']
-    post.description = request.data['description']
-    image_id_list = []
-    if request.data['images'] != '':
-        image_id_list = request.data['images'].split(',')
-    update_image_set(post.image_set.id, image_id_list)
+    if 'title' in request.data.keys():
+        post.title = request.data['title']
+    if 'description' in request.data.keys():
+        post.description = request.data['description']
+    if 'is_open' in request.data.keys():
+        post.is_open = request.data['is_open'] == 'true'
+    if 'images' in request.data.keys():
+        image_id_list = []
+        if request.data['images'] != '':
+            image_id_list = request.data['images'].split(',')
+        update_image_set(post.image_set.id, image_id_list)
     post.save()
     return HttpResponse(json.dumps({'success': True}))
 
