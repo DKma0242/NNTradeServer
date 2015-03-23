@@ -19,9 +19,9 @@ def get_dict_md5(data, token):
 def init_rest(request):
     if not hasattr(request, 'data'):
         if request.method == 'GET':
-            request.data = request.GET
+            request.data = request.GET.copy()
         elif request.method == 'POST':
-            request.data = request.POST
+            request.data = request.POST.copy()
         elif request.method == 'PUT':
             request.PUT = ast.literal_eval(request.body)
             request.data = request.PUT
