@@ -16,7 +16,7 @@ def get_dict_md5(data, token):
     return hashlib.md5(text).hexdigest()
 
 
-def init_rest(request):
+def init_request_data(request):
     if not hasattr(request, 'data'):
         if request.method == 'GET':
             request.data = request.GET.copy()
@@ -35,7 +35,7 @@ def init_rest(request):
 def request_login(view):
     @wraps(view)
     def wrapper(request, *args, **kwargs):
-        init_rest(request)
+        init_request_data(request)
         if 'user_id' not in request.data.keys() or 'token' not in request.data.keys():
             return errno.response_with_erron(errno.ERRNO_MISSING_PARAMETER)
         user_id = request.data['user_id']
@@ -71,7 +71,7 @@ def request_parameter(keys):
     def wrapper(view):
         @wraps(view)
         def view_wrapper(request, *args, **kwargs):
-            init_rest(request)
+            init_request_data(request)
             for key in keys:
                 if key not in request.data.keys():
                     return errno.response_with_erron(errno.ERRNO_MISSING_PARAMETER)
@@ -84,7 +84,7 @@ def allow_empty(keys):
     def wrapper(view):
         @wraps(view)
         def view_wrapper(request, *args, **kwargs):
-            init_rest(request)
+            init_request_data(request)
             for key in keys:
                 if key not in request.data.keys():
                     request.data[key] = ''

@@ -1,5 +1,6 @@
 import json
 from django.http import HttpResponse
+from django.utils.http import urlunquote
 from wrappers.wrapper import request_filter, request_login, allow_empty
 from images.image_set import create_image_set, update_image_set
 from errnos import errno
@@ -12,8 +13,8 @@ from models import PostSell
 def view_new_post(request):
     new_post = PostSell()
     new_post.user = request.user
-    new_post.title = request.data['title']
-    new_post.description = request.data['description']
+    new_post.title = urlunquote(request.data['title'])
+    new_post.description = urlunquote(request.data['description'])
     image_id_list = []
     if request.data['images'] != '':
         image_id_list = request.data['images'].split(',')

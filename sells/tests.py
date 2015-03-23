@@ -1,7 +1,9 @@
+# coding:utf-8
 import json
 import hashlib
 from django.test import TestCase
 from django.test.client import Client
+from django.utils.http import urlquote
 from wrappers.wrapper import get_dict_md5
 from errnos import errno
 
@@ -48,6 +50,34 @@ class NewSellPostTestCase(AuthTestCase):
         self.assertTrue(data['success'])
         self.assertEquals(data['post']['title'], 'Sell Title')
         self.assertEquals(data['post']['description'], 'New Sell!')
+        self.assertTrue('post_id' in data['post'].keys())
+        self.assertTrue('user_id' in data['post'].keys())
+        self.assertTrue('image_set_id' in data['post'].keys())
+        self.assertTrue('post_date' in data['post'].keys())
+        self.assertTrue('modify_date' in data['post'].keys())
+
+    def test_new_sell_post_utf_8(self):
+        self.login_test_user('login_name', '123456')
+        title = u'出售 test 信息'
+        description = u'出售 test 信息描述'
+        response = self.client.post('/sell/post/', self.add_token(
+            {
+                'user_id': self.user_id,
+                'title': urlquote(title),
+                'description': urlquote(description),
+                'images': '1,2,3',
+            }, self.token))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertTrue(data['success'])
+        self.assertTrue('post_id' in data.keys())
+        post_id = data['post_id']
+        response = self.client.get('/sell/post/' + str(post_id) + '/')
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertTrue(data['success'])
+        self.assertEquals(data['post']['title'], title)
+        self.assertEquals(data['post']['description'], description)
         self.assertTrue('post_id' in data['post'].keys())
         self.assertTrue('user_id' in data['post'].keys())
         self.assertTrue('image_set_id' in data['post'].keys())
