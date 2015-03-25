@@ -98,7 +98,7 @@ def view_posts(request, page_num):
     page_num = int(page_num)
     if page_num == 0:
         page_num = 1
-    posts = PostSell.objects.order_by('post_date')[(page_num - 1) * 20:page_num * 20 - 1]
+    posts = PostSell.objects.order_by('-post_date')[(page_num - 1) * 20:page_num * 20 - 1]
     data = {
         'success': True,
         'posts': [format_post_data(post) for post in posts],
